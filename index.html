@@ -375,7 +375,10 @@ function makeCard(t){
   ${getCatBadge(t.cat)}
   <div class="vw" onclick="playVideo(this,'${embedSrc}')">
     <div class="vw-ratio">
-      ${thumbSrc?`<img class="vw-thumb" src="${thumbSrc}" alt="Template #${t.num}" loading="lazy">`:'<div style="position:absolute;inset:0;background:#111"></div>'}
+      <div class="vw-placeholder" style="position:absolute;inset:0;background:linear-gradient(135deg,#0d0d1a,#1a0a2e);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px">
+        <div style="font-size:28px">🎬</div>
+        <div style="font-size:11px;color:#666;font-family:sans-serif">Tap to preview</div>
+      </div>
     </div>
     <div class="vw-play">
       <svg viewBox="0 0 24 24" width="26" height="26" fill="white"><path d="M8 5v14l11-7z"/></svg>
@@ -518,17 +521,20 @@ window.toggleLike=function(id){
 // ===== SHARE =====
 window.playVideo = function(vw, embedSrc){
   if(vw.classList.contains('playing')) return;
+  if(!embedSrc) return;
   vw.classList.add('playing');
   const ratio = vw.querySelector('.vw-ratio');
   const thumb = vw.querySelector('.vw-thumb');
   const playBtn = vw.querySelector('.vw-play');
+  const placeholder = vw.querySelector('.vw-placeholder');
   if(thumb) thumb.style.display='none';
   if(playBtn) playBtn.style.display='none';
+  if(placeholder) placeholder.style.display='none';
   const iframe = document.createElement('iframe');
-  iframe.src = embedSrc + '&autoplay=1';
+  iframe.src = embedSrc;
   iframe.allow = 'autoplay';
   iframe.frameBorder = '0';
-  iframe.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:none';
+  iframe.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#000';
   ratio.appendChild(iframe);
 };
 
