@@ -532,11 +532,22 @@ window.toggleLike=function(id){
 // ===== SHARE =====
 window.openVideoModal = function(embedSrc, title){
   if(!embedSrc) return;
+
+  // Detect Instagram/Facebook in-app browser
+  const ua = navigator.userAgent || '';
+  const isInsta = ua.includes('Instagram') || ua.includes('FBAN') || ua.includes('FBAV');
+
+  if(isInsta){
+    // Open Drive directly in external browser
+    const driveUrl = embedSrc.replace('/preview','');
+    window.open(driveUrl, '_blank');
+    return;
+  }
+
   const modal = document.getElementById('vidModal');
   const iframe = document.getElementById('vidIframe');
   const titleEl = document.getElementById('vidTitle');
   const loader = document.getElementById('vidLoader');
-  // Reset
   iframe.classList.remove('loaded');
   if(loader) loader.style.display='flex';
   iframe.src = embedSrc;
