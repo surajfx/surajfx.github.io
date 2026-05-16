@@ -35,7 +35,7 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{background:#000;color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4}
 .blob{position:fixed;border-radius:50%;filter:blur(90px);opacity:.15;pointer-events:none;z-index:0}
 .b1{width:500px;height:500px;background:var(--purple);top:-150px;left:-150px;animation:f1 12s ease-in-out infinite}
@@ -114,36 +114,17 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(42px,9vw,76px);font-weight:800;
 
 .rank-badge{position:absolute;top:10px;left:10px;z-index:10;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;padding:3px 9px;border-radius:100px;display:none;color:#fbbf24;border:1px solid rgba(251,191,36,.5)}
 
-/* === VIDEO CONTAINER === */
-.vw{
-  position:relative;
-  width:100%;
-  background:#000;
-  overflow:hidden;
-  border-radius:var(--r) var(--r) 0 0;
-}
-.vw-ratio{
-  position:relative;
-  width:100%;
-  padding-top:56.25%; /* 16:9 box — Drive video plays portrait inside with black bars */
-  background:#000;
-}
-.vw-ratio iframe{
-  position:absolute;
-  top:0; left:0;
-  width:100%;
-  height:100%;
-  border:none;
-  display:block;
-}
-.vo{
-  position:absolute;
-  bottom:0;left:0;right:0;
-  height:48px;
-  background:linear-gradient(to top,rgba(8,8,16,.95),transparent);
-  pointer-events:none;
-  z-index:3;
-}
+/* === VIDEO — THUMBNAIL + CLICK TO PLAY === */
+.vw{position:relative;width:100%;background:#000;overflow:hidden;border-radius:var(--r) var(--r) 0 0;cursor:pointer}
+.vw-ratio{position:relative;width:100%;padding-top:56.25%;background:#000}
+.vw-ratio iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;display:block}
+.vw-thumb{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;transition:transform .3s}
+.vw:hover .vw-thumb{transform:scale(1.04)}
+.vw-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .2s;pointer-events:none}
+.vw-play svg{width:24px;height:24px;fill:#fff;margin-left:3px}
+.vw:hover .vw-play{background:rgba(168,85,247,.8);transform:translate(-50%,-50%) scale(1.1)}
+.vw.playing .vw-thumb,.vw.playing .vw-play{display:none}
+.vo{position:absolute;bottom:0;left:0;right:0;height:48px;background:linear-gradient(to top,rgba(8,8,16,.95),transparent);pointer-events:none;z-index:3}
 
 .cb{padding:13px;position:relative;z-index:1}
 .cm{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
@@ -375,37 +356,30 @@ function getCatBadge(cat){
   return '<div class="cbadge bt">🔥 Trending</div>';
 }
 
-function getDriveEmbed(videoUrl){
-  const m = (videoUrl||'').match(/\/d\/([^/\?]+)/);
-  if(!m) return '';
-  return `https://drive.google.com/file/d/${m[1]}/preview`;
+function getDriveId(videoUrl){
+  const m=(videoUrl||'').match(/\/d\/([^/\?]+)/);
+  return m?m[1]:'';
 }
 
 function makeCard(t){
-  const isLiked = localStorage.getItem('like_'+t.id) ? 'liked' : '';
-  const heart = isLiked ? '❤️' : '🤍';
-  const howTo = t.howto || 'https://youtu.be/sWjPWRbE6lI?si=3dF_paJmtTc6FS3X';
-  const embedSrc = getDriveEmbed(t.video);
-  const cardUrl = `https://surajfx.in/#card-${t.num}`;
-
-  const videoHTML = embedSrc
-    ? `<div class="vw-ratio">
-        <iframe
-          src="${embedSrc}"
-          allow="autoplay; encrypted-media"
-          allowfullscreen
-          loading="lazy"
-          frameborder="0">
-        </iframe>
-      </div>`
-    : `<div style="padding-top:56.25%;position:relative;background:#000"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#444;font-size:13px">No Video</div></div>`;
+  const isLiked=localStorage.getItem('like_'+t.id)?'liked':'';
+  const heart=isLiked?'❤️':'🤍';
+  const howTo=t.howto||'https://youtu.be/sWjPWRbE6lI?si=3dF_paJmtTc6FS3X';
+  const driveId=getDriveId(t.video);
+  const thumbSrc=driveId?`https://drive.google.com/thumbnail?id=${driveId}&sz=w400`:'';
+  const embedSrc=driveId?`https://drive.google.com/file/d/${driveId}/preview`:'';
 
   return `
-<div class="card" id="card-${t.num}" data-id="${t.id}" data-num="${t.num}" data-cat="${t.cat||'trending'}" data-added="${t.addedAt||0}" data-capcut="${t.capcut||''}" data-thumb="${t.thumb||''}">
+<div class="card" id="card-${t.num}" data-id="${t.id}" data-num="${t.num}" data-cat="${t.cat||'trending'}" data-added="${t.addedAt||0}" data-capcut="${t.capcut||''}">
   <div class="rank-badge" id="rb_${t.id}"></div>
   ${getCatBadge(t.cat)}
-  <div class="vw">
-    ${videoHTML}
+  <div class="vw" onclick="playVideo(this,'${embedSrc}')">
+    <div class="vw-ratio">
+      ${thumbSrc?`<img class="vw-thumb" src="${thumbSrc}" alt="Template #${t.num}" loading="lazy">`:'<div style="position:absolute;inset:0;background:#111"></div>'}
+    </div>
+    <div class="vw-play">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="white"><path d="M8 5v14l11-7z"/></svg>
+    </div>
     <div class="vo"></div>
   </div>
   <div class="cb">
@@ -418,9 +392,7 @@ function makeCard(t){
           <span class="lheart">${heart}</span>
           <span id="lc_${t.id}">0</span>
         </button>
-        <button class="share-btn" onclick="shareCard(${t.num},'${cardUrl}')">
-          📤
-        </button>
+        <button class="share-btn" onclick="shareCard(${t.num})">📤</button>
       </div>
     </div>
     <div class="ca">
@@ -544,17 +516,30 @@ window.toggleLike=function(id){
 };
 
 // ===== SHARE =====
-window.shareCard=function(num, url){
-  const shareUrl = `https://surajfx.in/#card-${num}`;
-  const shareText = `🔥 Template #${num} – Surajfx CapCut Template\n${shareUrl}`;
+window.playVideo = function(vw, embedSrc){
+  if(vw.classList.contains('playing')) return;
+  vw.classList.add('playing');
+  const ratio = vw.querySelector('.vw-ratio');
+  const thumb = vw.querySelector('.vw-thumb');
+  const playBtn = vw.querySelector('.vw-play');
+  if(thumb) thumb.style.display='none';
+  if(playBtn) playBtn.style.display='none';
+  const iframe = document.createElement('iframe');
+  iframe.src = embedSrc + '&autoplay=1';
+  iframe.allow = 'autoplay';
+  iframe.frameBorder = '0';
+  iframe.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:none';
+  ratio.appendChild(iframe);
+};
+
+window.shareCard = function(num){
+  const url = `https://surajfx.in/#card-${num}`;
+  const text = `🔥 Template #${num} – Surajfx CapCut Template\n${url}`;
   if(navigator.share){
-    navigator.share({title:`Template #${num} – Surajfx`,text:`Check out Template #${num} on Surajfx!`,url:shareUrl})
-    .catch(()=>{});
+    navigator.share({title:`Template #${num} – Surajfx`, url}).catch(()=>{});
   } else {
-    navigator.clipboard.writeText(shareUrl).then(()=>showToast('✅ Link copied!')).catch(()=>{
-      // fallback
-      const wa=`https://wa.me/?text=${encodeURIComponent(shareText)}`;
-      window.open(wa,'_blank');
+    navigator.clipboard.writeText(url).then(()=>showToast('✅ Link copied!')).catch(()=>{
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,'_blank');
     });
   }
 };
