@@ -114,17 +114,25 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(42px,9vw,76px);font-weight:800;
 
 .rank-badge{position:absolute;top:10px;left:10px;z-index:10;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;padding:3px 9px;border-radius:100px;display:none;color:#fbbf24;border:1px solid rgba(251,191,36,.5)}
 
-/* === VIDEO — THUMBNAIL + CLICK TO PLAY === */
+/* === VIDEO MODAL POPUP === */
+.vid-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .3s}
+.vid-modal.open{opacity:1;pointer-events:all}
+.vid-modal-bg{position:absolute;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(12px)}
+.vid-modal-box{position:relative;z-index:1;width:100%;max-width:400px;border-radius:16px;overflow:hidden;background:#000;box-shadow:0 0 60px rgba(168,85,247,.4);transform:scale(.9);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.vid-modal.open .vid-modal-box{transform:scale(1)}
+.vid-modal-ratio{position:relative;width:100%;padding-top:56.25%}
+.vid-modal-ratio iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none}
+.vid-modal-close{position:absolute;top:10px;right:10px;z-index:10;width:32px;height:32px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:16px;line-height:1}
+.vid-modal-title{padding:12px 16px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;background:linear-gradient(135deg,rgba(168,85,247,.15),rgba(236,72,153,.1));border-top:1px solid rgba(255,255,255,.08)}
+
+/* === VIDEO CARD PLACEHOLDER === */
 .vw{position:relative;width:100%;background:#000;overflow:hidden;border-radius:var(--r) var(--r) 0 0;cursor:pointer}
-.vw-ratio{position:relative;width:100%;padding-top:56.25%;background:#000}
-.vw-ratio iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;display:block}
-.vw-thumb{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;transition:transform .3s}
-.vw:hover .vw-thumb{transform:scale(1.04)}
-.vw-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .2s;pointer-events:none}
+.vw-ratio{position:relative;width:100%;padding-top:56.25%;background:linear-gradient(135deg,#0d0d1a,#1a0a2e)}
+.vw-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;background:rgba(168,85,247,.3);border:2px solid rgba(168,85,247,.5);backdrop-filter:blur(6px);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .2s;pointer-events:none}
 .vw-play svg{width:24px;height:24px;fill:#fff;margin-left:3px}
-.vw:hover .vw-play{background:rgba(168,85,247,.8);transform:translate(-50%,-50%) scale(1.1)}
-.vw.playing .vw-thumb,.vw.playing .vw-play{display:none}
-.vo{position:absolute;bottom:0;left:0;right:0;height:48px;background:linear-gradient(to top,rgba(8,8,16,.95),transparent);pointer-events:none;z-index:3}
+.vw:hover .vw-play{background:rgba(168,85,247,.7);transform:translate(-50%,-50%) scale(1.1)}
+.vw-label{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;color:rgba(255,255,255,.5);font-family:'DM Sans',sans-serif;white-space:nowrap}
+.vo{position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(to top,rgba(8,8,16,.9),transparent);pointer-events:none;z-index:3}
 
 .cb{padding:13px;position:relative;z-index:1}
 .cm{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
@@ -373,16 +381,12 @@ function makeCard(t){
 <div class="card" id="card-${t.num}" data-id="${t.id}" data-num="${t.num}" data-cat="${t.cat||'trending'}" data-added="${t.addedAt||0}" data-capcut="${t.capcut||''}">
   <div class="rank-badge" id="rb_${t.id}"></div>
   ${getCatBadge(t.cat)}
-  <div class="vw" onclick="playVideo(this,'${embedSrc}')">
-    <div class="vw-ratio">
-      <div class="vw-placeholder" style="position:absolute;inset:0;background:linear-gradient(135deg,#0d0d1a,#1a0a2e);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px">
-        <div style="font-size:28px">🎬</div>
-        <div style="font-size:11px;color:#666;font-family:sans-serif">Tap to preview</div>
-      </div>
-    </div>
+  <div class="vw" onclick="openVideoModal('${embedSrc}','Template #${t.num}')">
+    <div class="vw-ratio"></div>
     <div class="vw-play">
       <svg viewBox="0 0 24 24" width="26" height="26" fill="white"><path d="M8 5v14l11-7z"/></svg>
     </div>
+    <div class="vw-label">▶ Tap to preview</div>
     <div class="vo"></div>
   </div>
   <div class="cb">
@@ -519,23 +523,23 @@ window.toggleLike=function(id){
 };
 
 // ===== SHARE =====
-window.playVideo = function(vw, embedSrc){
-  if(vw.classList.contains('playing')) return;
+window.openVideoModal = function(embedSrc, title){
   if(!embedSrc) return;
-  vw.classList.add('playing');
-  const ratio = vw.querySelector('.vw-ratio');
-  const thumb = vw.querySelector('.vw-thumb');
-  const playBtn = vw.querySelector('.vw-play');
-  const placeholder = vw.querySelector('.vw-placeholder');
-  if(thumb) thumb.style.display='none';
-  if(playBtn) playBtn.style.display='none';
-  if(placeholder) placeholder.style.display='none';
-  const iframe = document.createElement('iframe');
+  const modal = document.getElementById('vidModal');
+  const iframe = document.getElementById('vidIframe');
+  const titleEl = document.getElementById('vidTitle');
   iframe.src = embedSrc;
-  iframe.allow = 'autoplay';
-  iframe.frameBorder = '0';
-  iframe.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#000';
-  ratio.appendChild(iframe);
+  if(titleEl) titleEl.textContent = title||'';
+  modal.classList.add('open');
+  document.body.style.overflow='hidden';
+};
+
+window.closeVideoModal = function(){
+  const modal = document.getElementById('vidModal');
+  const iframe = document.getElementById('vidIframe');
+  modal.classList.remove('open');
+  iframe.src = '';
+  document.body.style.overflow='';
 };
 
 window.shareCard = function(num){
@@ -624,5 +628,17 @@ document.querySelectorAll('.fb').forEach(b=>{
 
 loadTemplates();
 </script>
+<!-- VIDEO MODAL -->
+<div class="vid-modal" id="vidModal" onclick="if(event.target===this)closeVideoModal()">
+  <div class="vid-modal-bg" onclick="closeVideoModal()"></div>
+  <div class="vid-modal-box">
+    <button class="vid-modal-close" onclick="closeVideoModal()">✕</button>
+    <div class="vid-modal-ratio">
+      <iframe id="vidIframe" src="" allow="autoplay" frameborder="0"></iframe>
+    </div>
+    <div class="vid-modal-title" id="vidTitle"></div>
+  </div>
+</div>
+
 </body>
 </html>
