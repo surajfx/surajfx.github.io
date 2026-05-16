@@ -123,6 +123,7 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(42px,9vw,76px);font-weight:800;
 .vid-modal-ratio{position:relative;width:100%;padding-top:133.33%;background:#000;overflow:hidden}
 .vid-modal-ratio iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;opacity:0;transition:opacity .3s}
 .vid-modal-ratio iframe.loaded{opacity:1}
+.vid-modal-ratio .click-block{position:absolute;inset:0;z-index:4;cursor:default}
 .vid-loader{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;display:flex;flex-direction:column;align-items:center;gap:10px}
 .vid-loader-spin{width:36px;height:36px;border:3px solid rgba(168,85,247,.3);border-top-color:#a855f7;border-radius:50%;animation:sp .7s linear infinite}
 .vid-loader-text{font-size:12px;color:var(--muted);font-family:'DM Sans',sans-serif}
@@ -652,6 +653,7 @@ loadTemplates();
         <div class="vid-loader-text">Loading video...</div>
       </div>
       <iframe id="vidIframe" src="" allow="autoplay" frameborder="0" onload="this.classList.add('loaded');document.getElementById('vidLoader').style.display='none'"></iframe>
+      <div class="click-block"></div>
     </div>
     <div class="vid-modal-title" id="vidTitle"></div>
   </div>
