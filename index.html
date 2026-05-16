@@ -90,20 +90,10 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(42px,9vw,76px);font-weight:800;
 .trend-info{font-size:11px;color:var(--muted);background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);padding:6px 14px;border-radius:100px;margin-bottom:14px;display:none;text-align:center}
 .trend-info.show{display:block}
 
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(291px,1fr));gap:14px}
-.cb{padding:11px;position:relative;z-index:1}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
 
 /* CARD */
-.card{
-  background:var(--grad-card);
-  border:1px solid var(--border);
-  border-radius:var(--r);
-  overflow:hidden;
-  transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s;
-  position:relative;
-  -webkit-mask-image:-webkit-radial-gradient(white,black);
-  contain:layout style;
-}
+.card{background:var(--grad-card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s;position:relative}
 .card::before{content:'';position:absolute;inset:0;border-radius:var(--r);background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(236,72,153,.04),rgba(249,115,22,.04));pointer-events:none;z-index:0}
 .card:hover{transform:translateY(-5px) scale(1.01);box-shadow:0 20px 50px rgba(0,0,0,.5),0 0 30px rgba(168,85,247,.2);border-color:rgba(168,85,247,.3)}
 
@@ -114,25 +104,9 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(42px,9vw,76px);font-weight:800;
 
 .rank-badge{position:absolute;top:10px;left:10px;z-index:10;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;padding:3px 9px;border-radius:100px;display:none;color:#fbbf24;border:1px solid rgba(251,191,36,.5)}
 
-/* === VIDEO MODAL POPUP === */
-.vid-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .3s}
-.vid-modal.open{opacity:1;pointer-events:all}
-.vid-modal-bg{position:absolute;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(12px)}
-.vid-modal-box{position:relative;z-index:1;width:100%;max-width:400px;border-radius:16px;overflow:hidden;background:#000;box-shadow:0 0 60px rgba(168,85,247,.4);transform:scale(.9);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
-.vid-modal.open .vid-modal-box{transform:scale(1)}
-.vid-modal-ratio{position:relative;width:100%;padding-top:56.25%}
-.vid-modal-ratio iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none}
-.vid-modal-close{position:absolute;top:10px;right:10px;z-index:10;width:32px;height:32px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:16px;line-height:1}
-.vid-modal-title{padding:12px 16px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;background:linear-gradient(135deg,rgba(168,85,247,.15),rgba(236,72,153,.1));border-top:1px solid rgba(255,255,255,.08)}
-
-/* === VIDEO CARD PLACEHOLDER === */
-.vw{position:relative;width:100%;background:#000;overflow:hidden;border-radius:var(--r) var(--r) 0 0;cursor:pointer}
-.vw-ratio{position:relative;width:100%;padding-top:56.25%;background:linear-gradient(135deg,#0d0d1a,#1a0a2e)}
-.vw-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;background:rgba(168,85,247,.3);border:2px solid rgba(168,85,247,.5);backdrop-filter:blur(6px);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .2s;pointer-events:none}
-.vw-play svg{width:24px;height:24px;fill:#fff;margin-left:3px}
-.vw:hover .vw-play{background:rgba(168,85,247,.7);transform:translate(-50%,-50%) scale(1.1)}
-.vw-label{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;color:rgba(255,255,255,.5);font-family:'DM Sans',sans-serif;white-space:nowrap}
-.vo{position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(to top,rgba(8,8,16,.9),transparent);pointer-events:none;z-index:3}
+.vw{position:relative;width:100%;background:#0d0d1a;overflow:hidden}
+.vw iframe{width:100%;aspect-ratio:16/9;border:none;display:block}
+.vo{position:absolute;bottom:0;left:0;right:0;height:50px;background:linear-gradient(to top,rgba(8,8,16,.9),transparent);pointer-events:none}
 
 .cb{padding:13px;position:relative;z-index:1}
 .cm{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
@@ -275,7 +249,6 @@ footer{text-align:center;padding:36px 16px 100px;border-top:1px solid var(--bord
     </div>
   </div>
 </div>
-
 <!-- AI Prompt Cards (always at bottom) -->
 <div class="ai-section" id="aiSection">
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px">
@@ -364,29 +337,28 @@ function getCatBadge(cat){
   return '<div class="cbadge bt">🔥 Trending</div>';
 }
 
-function getDriveId(videoUrl){
-  const m=(videoUrl||'').match(/\/d\/([^/\?]+)/);
-  return m?m[1]:'';
+function getDriveEmbed(videoUrl){
+  const m = (videoUrl||'').match(/\/d\/([^/\?]+)/);
+  if(!m) return '';
+  return `https://drive.google.com/file/d/${m[1]}/preview`;
 }
 
 function makeCard(t){
-  const isLiked=localStorage.getItem('like_'+t.id)?'liked':'';
-  const heart=isLiked?'❤️':'🤍';
-  const howTo=t.howto||'https://youtu.be/sWjPWRbE6lI?si=3dF_paJmtTc6FS3X';
-  const driveId=getDriveId(t.video);
-  const thumbSrc=driveId?`https://drive.google.com/thumbnail?id=${driveId}&sz=w400`:'';
-  const embedSrc=driveId?`https://drive.google.com/file/d/${driveId}/preview`:'';
+  const isLiked = localStorage.getItem('like_'+t.id) ? 'liked' : '';
+  const heart = isLiked ? '❤️' : '🤍';
+  const howTo = t.howto || 'https://youtu.be/sWjPWRbE6lI?si=3dF_paJmtTc6FS3X';
+  const embedSrc = getDriveEmbed(t.video);
+  const cardUrl = `https://surajfx.in/#card-${t.num}`;
 
   return `
-<div class="card" id="card-${t.num}" data-id="${t.id}" data-num="${t.num}" data-cat="${t.cat||'trending'}" data-added="${t.addedAt||0}" data-capcut="${t.capcut||''}">
+<div class="card" id="card-${t.num}" data-id="${t.id}" data-num="${t.num}" data-cat="${t.cat||'trending'}" data-added="${t.addedAt||0}" data-capcut="${t.capcut||''}" data-thumb="${t.thumb||''}">
   <div class="rank-badge" id="rb_${t.id}"></div>
   ${getCatBadge(t.cat)}
-  <div class="vw" onclick="openVideoModal('${embedSrc}','Template #${t.num}')">
-    <div class="vw-ratio"></div>
-    <div class="vw-play">
-      <svg viewBox="0 0 24 24" width="26" height="26" fill="white"><path d="M8 5v14l11-7z"/></svg>
-    </div>
-    <div class="vw-label">▶ Tap to preview</div>
+  <div class="vw">
+    ${embedSrc
+      ? `<iframe src="${embedSrc}" allow="autoplay" loading="lazy"></iframe>`
+      : `<div style="aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:#555;font-size:13px">No Video</div>`
+    }
     <div class="vo"></div>
   </div>
   <div class="cb">
@@ -399,7 +371,9 @@ function makeCard(t){
           <span class="lheart">${heart}</span>
           <span id="lc_${t.id}">0</span>
         </button>
-        <button class="share-btn" onclick="shareCard(${t.num})">📤</button>
+        <button class="share-btn" onclick="shareCard(${t.num},'${cardUrl}')">
+          📤
+        </button>
       </div>
     </div>
     <div class="ca">
@@ -523,33 +497,17 @@ window.toggleLike=function(id){
 };
 
 // ===== SHARE =====
-window.openVideoModal = function(embedSrc, title){
-  if(!embedSrc) return;
-  const modal = document.getElementById('vidModal');
-  const iframe = document.getElementById('vidIframe');
-  const titleEl = document.getElementById('vidTitle');
-  iframe.src = embedSrc;
-  if(titleEl) titleEl.textContent = title||'';
-  modal.classList.add('open');
-  document.body.style.overflow='hidden';
-};
-
-window.closeVideoModal = function(){
-  const modal = document.getElementById('vidModal');
-  const iframe = document.getElementById('vidIframe');
-  modal.classList.remove('open');
-  iframe.src = '';
-  document.body.style.overflow='';
-};
-
-window.shareCard = function(num){
-  const url = `https://surajfx.in/#card-${num}`;
-  const text = `🔥 Template #${num} – Surajfx CapCut Template\n${url}`;
+window.shareCard=function(num, url){
+  const shareUrl = `https://surajfx.in/#card-${num}`;
+  const shareText = `🔥 Template #${num} – Surajfx CapCut Template\n${shareUrl}`;
   if(navigator.share){
-    navigator.share({title:`Template #${num} – Surajfx`, url}).catch(()=>{});
+    navigator.share({title:`Template #${num} – Surajfx`,text:`Check out Template #${num} on Surajfx!`,url:shareUrl})
+    .catch(()=>{});
   } else {
-    navigator.clipboard.writeText(url).then(()=>showToast('✅ Link copied!')).catch(()=>{
-      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,'_blank');
+    navigator.clipboard.writeText(shareUrl).then(()=>showToast('✅ Link copied!')).catch(()=>{
+      // fallback
+      const wa=`https://wa.me/?text=${encodeURIComponent(shareText)}`;
+      window.open(wa,'_blank');
     });
   }
 };
@@ -628,17 +586,5 @@ document.querySelectorAll('.fb').forEach(b=>{
 
 loadTemplates();
 </script>
-<!-- VIDEO MODAL -->
-<div class="vid-modal" id="vidModal" onclick="if(event.target===this)closeVideoModal()">
-  <div class="vid-modal-bg" onclick="closeVideoModal()"></div>
-  <div class="vid-modal-box">
-    <button class="vid-modal-close" onclick="closeVideoModal()">✕</button>
-    <div class="vid-modal-ratio">
-      <iframe id="vidIframe" src="" allow="autoplay" frameborder="0"></iframe>
-    </div>
-    <div class="vid-modal-title" id="vidTitle"></div>
-  </div>
-</div>
-
 </body>
 </html>
