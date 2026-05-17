@@ -114,22 +114,6 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(42px,9vw,76px);font-weight:800;
 
 .rank-badge{position:absolute;top:10px;left:10px;z-index:10;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;padding:3px 9px;border-radius:100px;display:none;color:#fbbf24;border:1px solid rgba(251,191,36,.5)}
 
-/* === VIDEO MODAL POPUP === */
-.vid-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .3s}
-.vid-modal.open{opacity:1;pointer-events:all}
-.vid-modal-bg{position:absolute;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(12px)}
-.vid-modal-box{position:relative;z-index:1;width:100%;max-width:400px;border-radius:16px;overflow:hidden;background:#000;box-shadow:0 0 60px rgba(168,85,247,.4);transform:scale(.9);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
-.vid-modal.open .vid-modal-box{transform:scale(1)}
-.vid-modal-ratio{position:relative;width:100%;padding-top:133.33%;background:#000;overflow:hidden}
-.vid-modal-ratio iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;opacity:0;transition:opacity .3s}
-.vid-modal-ratio iframe.loaded{opacity:1}
-.vid-modal-ratio .click-block{position:absolute;inset:0;z-index:4;cursor:default}
-.vid-loader{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;display:flex;flex-direction:column;align-items:center;gap:10px}
-.vid-loader-spin{width:36px;height:36px;border:3px solid rgba(168,85,247,.3);border-top-color:#a855f7;border-radius:50%;animation:sp .7s linear infinite}
-.vid-loader-text{font-size:12px;color:var(--muted);font-family:'DM Sans',sans-serif}
-.vid-modal-close{position:absolute;top:10px;right:10px;z-index:10;width:32px;height:32px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:16px;line-height:1}
-.vid-modal-title{padding:12px 16px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;background:linear-gradient(135deg,rgba(168,85,247,.15),rgba(236,72,153,.1));border-top:1px solid rgba(255,255,255,.08)}
-
 /* === VIDEO CARD === */
 .vw{position:relative;width:100%;background:#0d0d1a;overflow:hidden;border-radius:var(--r) var(--r) 0 0;cursor:pointer}
 .vw-ratio{position:relative;width:100%;padding-top:56.25%;background:linear-gradient(135deg,#0d0d1a,#1a0a2e)}
@@ -416,7 +400,7 @@ function makeCard(t){
 <div class="card" id="card-${t.num}" data-id="${t.id}" data-num="${t.num}" data-cat="${t.cat||'trending'}" data-added="${t.addedAt||0}" data-capcut="${t.capcut||''}">
   <div class="rank-badge" id="rb_${t.id}"></div>
   ${getCatBadge(t.cat)}
-  <div class="vw" onclick="openVideoModal('${embed}','Template #${t.num}')">
+  <a href="${t.video||'#'}" target="_blank" class="vw" style="display:block;text-decoration:none">
     <div class="vw-ratio">
       ${thumb?`<img class="vw-thumb" src="${thumb}" alt="Template #${t.num}" loading="lazy" onerror="this.style.opacity=0">`:''}
     </div>
@@ -424,7 +408,7 @@ function makeCard(t){
       <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M8 5v14l11-7z"/></svg>
     </div>
     <div class="vo"></div>
-  </div>
+  </a>
   <div class="cb">
     <div class="cm">
       <div class="cn">Template #${t.num}</div>
@@ -560,30 +544,7 @@ window.toggleLike=function(id){
 };
 
 // ===== SHARE =====
-window.openVideoModal = function(embedSrc, title){
-  if(!embedSrc) return;
-  const modal = document.getElementById('vidModal');
-  const iframe = document.getElementById('vidIframe');
-  const titleEl = document.getElementById('vidTitle');
-  const loader = document.getElementById('vidLoader');
-  iframe.classList.remove('loaded');
-  if(loader) loader.style.display='flex';
-  iframe.src = embedSrc + '&autoplay=1';
-  if(titleEl) titleEl.textContent = title||'';
-  modal.classList.add('open');
-  document.body.style.overflow='hidden';
-};
-
-window.closeVideoModal = function(){
-  const modal = document.getElementById('vidModal');
-  const iframe = document.getElementById('vidIframe');
-  const loader = document.getElementById('vidLoader');
-  modal.classList.remove('open');
-  iframe.src = '';
-  iframe.classList.remove('loaded');
-  if(loader) loader.style.display='flex';
-  document.body.style.overflow='';
-};
+// Share function
 
 window.shareCard = function(num){
   const url = `https://surajfx.in/#card-${num}`;
@@ -679,22 +640,7 @@ onValue(ref(db,'settings/extraBtn'), snap=>{
 
 loadTemplates();
 </script>
-<!-- VIDEO MODAL -->
-<div class="vid-modal" id="vidModal" onclick="if(event.target===this)closeVideoModal()">
-  <div class="vid-modal-bg" onclick="closeVideoModal()"></div>
-  <div class="vid-modal-box">
-    <button class="vid-modal-close" onclick="closeVideoModal()">✕</button>
-    <div class="vid-modal-ratio">
-      <div class="vid-loader" id="vidLoader">
-        <div class="vid-loader-spin"></div>
-        <div class="vid-loader-text">Loading video...</div>
-      </div>
-      <iframe id="vidIframe" src="" allow="autoplay" frameborder="0" onload="this.classList.add('loaded');document.getElementById('vidLoader').style.display='none'"></iframe>
-      <div class="click-block"></div>
-    </div>
-    <div class="vid-modal-title" id="vidTitle"></div>
-  </div>
-</div>
+<!-- END -->
 
 </body>
 </html>
