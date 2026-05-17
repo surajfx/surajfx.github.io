@@ -46,7 +46,20 @@ label{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.5px;text
 .cat-trending{background:rgba(249,115,22,.2);color:#fb923c}
 .cat-cinematic{background:rgba(168,85,247,.2);color:#c084fc}
 .cat-hindi{background:rgba(236,72,153,.2);color:#f472b6}
-.btn-del{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#f87171;padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600}
+.btn-del{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#f87171;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600}
+.btn-edit{background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);color:#c084fc;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600}
+.btn-edit:hover{background:rgba(168,85,247,.25)}
+
+/* EDIT MODAL */
+.edit-modal{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .3s}
+.edit-modal.open{opacity:1;pointer-events:all}
+.edit-modal-bg{position:absolute;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(10px)}
+.edit-modal-box{position:relative;z-index:1;background:#0f0f1e;border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;transform:scale(.9);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.edit-modal.open .edit-modal-box{transform:scale(1)}
+.edit-modal-title{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:20px}
+.edit-close{position:absolute;top:14px;right:14px;background:var(--surface);border:1px solid var(--border);color:var(--muted);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.btn-save{background:var(--grad);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;padding:12px 24px;border-radius:10px;border:none;cursor:pointer;width:100%;margin-top:8px}
+.btn-save:disabled{opacity:.5;cursor:not-allowed}
 .empty-list{text-align:center;color:var(--muted);font-size:14px;padding:32px}
 .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(168,85,247,.3);border-top-color:#a855f7;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:4px}
 @keyframes sp{to{transform:rotate(360deg)}}
@@ -104,8 +117,8 @@ label{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.5px;text
         </select>
       </div>
       <div class="form-group full">
-        <label>Google Drive Video Link *</label>
-        <input class="finp" type="url" id="fVideo" placeholder="https://drive.google.com/file/d/xxxxx/view">
+        <label>YouTube Video Link *</label>
+        <input class="finp" type="url" id="fVideo" placeholder="https://youtu.be/xxxxx or https://youtube.com/watch?v=xxxxx">
       </div>
       <div class="form-group full">
         <label>CapCut Template Link *</label>
@@ -203,6 +216,9 @@ function loadList(){
       const catClass=t.cat==='cinematic'?'cat-cinematic':t.cat==='hindi'?'cat-hindi':'cat-trending';
       const catLabel=t.cat==='cinematic'?'🎬 Cinematic':t.cat==='hindi'?'🎵 Hindi':'🔥 Trending';
       const date=t.addedAt?new Date(t.addedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'Unknown';
+      const safeVideo=(t.video||'').replace(/'/g,"\\'");
+      const safeCapcut=(t.capcut||'').replace(/'/g,"\\'");
+      const safeHowto=(t.howto||'').replace(/'/g,"\\'");
       return `
       <div class="tpl-item">
         <div class="tpl-num">#${t.num||'?'}</div>
@@ -213,7 +229,10 @@ function loadList(){
           </div>
           <div class="tpl-meta">Added: ${date}</div>
         </div>
-        <button class="btn-del" onclick="delTemplate('${id}')">🗑 Delete</button>
+        <div style="display:flex;gap:6px">
+          <button class="btn-edit" onclick="openEdit('${id}',${t.num},'${safeVideo}','${safeCapcut}','${safeHowto}','${t.cat||'trending'}')">✏️ Edit</button>
+          <button class="btn-del" onclick="delTemplate('${id}')">🗑</button>
+        </div>
       </div>`;
     }).join('');
   });
@@ -246,6 +265,84 @@ window.delTemplate=async function(id){
   if(!confirm('Delete this template? This cannot be undone!')) return;
   await remove(ref(db,'templates/'+id));
 };
+
+window.saveEdit=async function(){
+  const id=document.getElementById('editId').value;
+  const num=document.getElementById('editNum').value.trim();
+  const video=document.getElementById('editVideo').value.trim();
+  const capcut=document.getElementById('editCapcut').value.trim();
+  const howto=document.getElementById('editHowto').value.trim();
+  const cat=document.getElementById('editCat').value;
+  if(!num||!video||!capcut){alert('Template number, video link and CapCut link are required!');return;}
+  const btn=document.getElementById('saveBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> Saving...';
+  try{
+    const {set} = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
+    await set(ref(db,'templates/'+id),{
+      num:parseInt(num), video, capcut,
+      howto:howto||'', cat,
+      addedAt: Date.now()
+    });
+    const msg=document.getElementById('editSuccess');
+    msg.style.display='block';
+    setTimeout(()=>{msg.style.display='none'; closeEdit();},1500);
+  }catch(e){alert('Error: '+e.message);}
+  btn.disabled=false; btn.innerHTML='✦ Save Changes';
+};
 </script>
+<!-- EDIT MODAL -->
+<div class="edit-modal" id="editModal">
+  <div class="edit-modal-bg" onclick="closeEdit()"></div>
+  <div class="edit-modal-box">
+    <button class="edit-close" onclick="closeEdit()">✕</button>
+    <div class="edit-modal-title" id="editTitle">✏️ Edit Template</div>
+    <input type="hidden" id="editId">
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Template Number</label>
+      <input class="finp" type="number" id="editNum">
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Category</label>
+      <select class="finp" id="editCat">
+        <option value="trending">🔥 Trending</option>
+        <option value="cinematic">🎬 Cinematic</option>
+        <option value="hindi">🎵 Hindi</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>YouTube Video Link</label>
+      <input class="finp" type="url" id="editVideo" placeholder="https://youtu.be/xxxxx">
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>CapCut Template Link</label>
+      <input class="finp" type="url" id="editCapcut" placeholder="https://capcut-yt.onelink.me/...">
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>How to Use Video Link (optional)</label>
+      <input class="finp" type="url" id="editHowto" placeholder="https://youtu.be/...">
+    </div>
+    <button class="btn-save" id="saveBtn" onclick="saveEdit()">✦ Save Changes</button>
+    <div class="success-msg" id="editSuccess" style="margin-top:8px">✅ Saved successfully!</div>
+  </div>
+</div>
+
+<script>
+window.openEdit = function(id, num, video, capcut, howto, cat){
+  document.getElementById('editId').value = id;
+  document.getElementById('editNum').value = num;
+  document.getElementById('editVideo').value = video;
+  document.getElementById('editCapcut').value = capcut;
+  document.getElementById('editHowto').value = howto;
+  document.getElementById('editCat').value = cat;
+  document.getElementById('editTitle').textContent = '✏️ Edit Template #'+num;
+  document.getElementById('editSuccess').style.display='none';
+  document.getElementById('editModal').classList.add('open');
+};
+
+window.closeEdit = function(){
+  document.getElementById('editModal').classList.remove('open');
+};
+</script>
+
 </body>
 </html>
