@@ -315,7 +315,10 @@ window.saveEdit=async function(){
     </div>
     <div class="form-group" style="margin-bottom:12px">
       <label>CapCut Template Link</label>
-      <input class="finp" type="url" id="editCapcut" placeholder="https://capcut-yt.onelink.me/...">
+      <div style="display:flex;gap:8px;align-items:center">
+        <input class="finp" type="url" id="editCapcut" placeholder="https://capcut-yt.onelink.me/..." style="flex:1">
+        <button onclick="copyCapcut()" style="background:rgba(168,85,247,.2);border:1px solid rgba(168,85,247,.4);color:#c084fc;padding:11px 14px;border-radius:10px;font-size:13px;cursor:pointer;white-space:nowrap;font-family:'Syne',sans-serif;font-weight:700;flex-shrink:0" id="copyBtn">📋 Copy</button>
+      </div>
     </div>
     <div class="form-group" style="margin-bottom:16px">
       <label>How to Use Video Link (optional)</label>
@@ -341,6 +344,28 @@ window.openEdit = function(id, num, video, capcut, howto, cat){
 
 window.closeEdit = function(){
   document.getElementById('editModal').classList.remove('open');
+};
+
+window.copyCapcut = function(){
+  const val = document.getElementById('editCapcut').value.trim();
+  if(!val){ alert('No link to copy!'); return; }
+  navigator.clipboard.writeText(val).then(()=>{
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✅ Copied!';
+    btn.style.color = '#4ade80';
+    setTimeout(()=>{ btn.textContent='📋 Copy'; btn.style.color='#c084fc'; }, 2000);
+  }).catch(()=>{
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = val;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✅ Copied!';
+    setTimeout(()=>{ btn.textContent='📋 Copy'; }, 2000);
+  });
 };
 </script>
 
