@@ -400,7 +400,7 @@ function makeCard(t){
 <div class="card" id="card-${t.num}" data-id="${t.id}" data-num="${t.num}" data-cat="${t.cat||'trending'}" data-added="${t.addedAt||0}" data-capcut="${t.capcut||''}">
   <div class="rank-badge" id="rb_${t.id}"></div>
   ${getCatBadge(t.cat)}
-  <a href="${t.video||'#'}" target="_blank" class="vw" style="display:block;text-decoration:none">
+  <div class="vw" id="vw_${t.id}" onclick="playInCard(this,'${embed}')">
     <div class="vw-ratio">
       ${thumb?`<img class="vw-thumb" src="${thumb}" alt="Template #${t.num}" loading="lazy" onerror="this.style.opacity=0">`:''}
     </div>
@@ -408,7 +408,7 @@ function makeCard(t){
       <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M8 5v14l11-7z"/></svg>
     </div>
     <div class="vo"></div>
-  </a>
+  </div>
   <div class="cb">
     <div class="cm">
       <div class="cn">Template #${t.num}</div>
@@ -545,6 +545,25 @@ window.toggleLike=function(id){
 
 // ===== SHARE =====
 // Share function
+window.playInCard = function(vw, embedSrc){
+  if(vw.classList.contains('playing')) return;
+  if(!embedSrc) return;
+  vw.classList.add('playing');
+  const ratio = vw.querySelector('.vw-ratio');
+  const thumb = vw.querySelector('.vw-thumb');
+  const play = vw.querySelector('.vw-play');
+  const vo = vw.querySelector('.vo');
+  if(thumb) thumb.style.display='none';
+  if(play) play.style.display='none';
+  if(vo) vo.style.display='none';
+  const iframe = document.createElement('iframe');
+  iframe.src = embedSrc + '&autoplay=1';
+  iframe.allow = 'autoplay; encrypted-media; picture-in-picture';
+  iframe.allowFullscreen = true;
+  iframe.frameBorder = '0';
+  iframe.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:none';
+  ratio.appendChild(iframe);
+};
 
 window.shareCard = function(num){
   const url = `https://surajfx.in/#card-${num}`;
