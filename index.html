@@ -132,13 +132,17 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(42px,9vw,76px);font-weight:800;
 
 /* === VIDEO CARD === */
 .vw{position:relative;width:100%;background:#0d0d1a;overflow:hidden;border-radius:var(--r) var(--r) 0 0;cursor:pointer}
-.vw-ratio{position:relative;width:100%;padding-top:133.33%;background:linear-gradient(135deg,#0d0d1a,#1a0a2e)}
+.vw-ratio{position:relative;width:100%;padding-top:56.25%;background:linear-gradient(135deg,#0d0d1a,#1a0a2e)}
 .vw-thumb{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;transition:transform .4s}
 .vw:hover .vw-thumb{transform:scale(1.04)}
-.vw-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;background:rgba(168,85,247,.35);border:2px solid rgba(168,85,247,.6);backdrop-filter:blur(8px);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .25s;pointer-events:none;z-index:2}
+.vw-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:52px;height:52px;background:rgba(168,85,247,.35);border:2px solid rgba(168,85,247,.6);backdrop-filter:blur(8px);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .25s;pointer-events:none;z-index:2}
 .vw-play svg{width:24px;height:24px;fill:#fff;margin-left:3px}
 .vw:hover .vw-play{background:rgba(168,85,247,.75);transform:translate(-50%,-50%) scale(1.12)}
-.vo{position:absolute;bottom:0;left:0;right:0;height:50px;background:linear-gradient(to top,rgba(8,8,16,.95),transparent);pointer-events:none;z-index:3}
+.vo{position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(to top,rgba(8,8,16,.95),transparent);pointer-events:none;z-index:3}
+/* Extra middle button */
+.be{background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff !important;box-shadow:0 4px 20px rgba(99,102,241,.3)}
+.be:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(99,102,241,.5)}
+.be-dis{background:rgba(255,255,255,.04) !important;color:rgba(255,255,255,.25) !important;border:1px solid rgba(255,255,255,.08) !important;cursor:not-allowed !important;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;width:100%;padding:11px;border-radius:var(--rs)}
 
 .cb{padding:13px;position:relative;z-index:1}
 .cm{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
@@ -370,26 +374,51 @@ function getCatBadge(cat){
   return '<div class="cbadge bt">🔥 Trending</div>';
 }
 
-function getDriveId(videoUrl){
-  const m=(videoUrl||'').match(/\/d\/([^/\?]+)/);
-  return m?m[1]:'';
+function getYouTubeId(url){
+  if(!url) return '';
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([^?&\s]+)/);
+  return m ? m[1] : '';
+}
+
+function getDriveId(url){
+  if(!url) return '';
+  const m = url.match(/\/d\/([^/\?]+)/);
+  return m ? m[1] : '';
+}
+
+function getVideoInfo(url){
+  const ytId = getYouTubeId(url);
+  if(ytId) return {
+    thumb: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
+    embed: `https://www.youtube.com/embed/${ytId}?rel=0&modestbranding=1`
+  };
+  const driveId = getDriveId(url);
+  if(driveId) return {
+    thumb: `https://lh3.googleusercontent.com/d/${driveId}=w400`,
+    embed: `https://drive.google.com/file/d/${driveId}/preview`
+  };
+  return {thumb:'', embed:''};
 }
 
 function makeCard(t){
   const isLiked=localStorage.getItem('like_'+t.id)?'liked':'';
   const heart=isLiked?'❤️':'🤍';
   const howTo=t.howto||'https://youtu.be/sWjPWRbE6lI?si=3dF_paJmtTc6FS3X';
-  const driveId=getDriveId(t.video);
-  const thumbSrc=driveId?`https://lh3.googleusercontent.com/d/${driveId}=w400`:'';
-  const embedSrc=driveId?`https://drive.google.com/file/d/${driveId}/preview`:'';
+  const {thumb, embed} = getVideoInfo(t.video);
+
+  // Extra button (from global Firebase settings)
+  const eb = window._extraBtn||{};
+  const extraBtn = eb.enabled
+    ? `<a href="${eb.link||'#'}" target="_blank" class="bu be">${eb.name||'🔗 Extra'}</a>`
+    : `<button class="bu be-dis" disabled>🔒 ${eb.name||'Coming Soon'}</button>`;
 
   return `
 <div class="card" id="card-${t.num}" data-id="${t.id}" data-num="${t.num}" data-cat="${t.cat||'trending'}" data-added="${t.addedAt||0}" data-capcut="${t.capcut||''}">
   <div class="rank-badge" id="rb_${t.id}"></div>
   ${getCatBadge(t.cat)}
-  <div class="vw" onclick="openVideoModal('${embedSrc}','Template #${t.num}')">
+  <div class="vw" onclick="openVideoModal('${embed}','Template #${t.num}')">
     <div class="vw-ratio">
-      ${thumbSrc?`<img class="vw-thumb" src="${thumbSrc}" alt="Template #${t.num}" loading="lazy" onerror="this.style.opacity='0'">`:''}
+      ${thumb?`<img class="vw-thumb" src="${thumb}" alt="Template #${t.num}" loading="lazy" onerror="this.style.opacity=0">`:''}
     </div>
     <div class="vw-play">
       <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M8 5v14l11-7z"/></svg>
@@ -411,6 +440,7 @@ function makeCard(t){
     </div>
     <div class="ca">
       <a href="${t.capcut||'#'}" target="_blank" class="bu bp" onclick="inc('${t.id}')">✦ Use Template on CapCut</a>
+      ${extraBtn}
       <a href="${howTo}" target="_blank" class="bu bs">📖 How to use template</a>
     </div>
   </div>
@@ -532,25 +562,13 @@ window.toggleLike=function(id){
 // ===== SHARE =====
 window.openVideoModal = function(embedSrc, title){
   if(!embedSrc) return;
-
-  // Detect Instagram/Facebook in-app browser
-  const ua = navigator.userAgent || '';
-  const isInsta = ua.includes('Instagram') || ua.includes('FBAN') || ua.includes('FBAV');
-
-  if(isInsta){
-    // Open Drive directly in external browser
-    const driveUrl = embedSrc.replace('/preview','');
-    window.open(driveUrl, '_blank');
-    return;
-  }
-
   const modal = document.getElementById('vidModal');
   const iframe = document.getElementById('vidIframe');
   const titleEl = document.getElementById('vidTitle');
   const loader = document.getElementById('vidLoader');
   iframe.classList.remove('loaded');
   if(loader) loader.style.display='flex';
-  iframe.src = embedSrc;
+  iframe.src = embedSrc + '&autoplay=1';
   if(titleEl) titleEl.textContent = title||'';
   modal.classList.add('open');
   document.body.style.overflow='hidden';
@@ -649,6 +667,14 @@ document.querySelectorAll('.fb').forEach(b=>{
     if(window._af==='trending') inp.value='';
     doFilter();
   });
+});
+
+// Load extra button settings from Firebase
+window._extraBtn = {enabled:false, name:'Coming Soon', link:''};
+onValue(ref(db,'settings/extraBtn'), snap=>{
+  const v = snap.val();
+  if(v) window._extraBtn = v;
+  if(allTemplates.length > 0) doFilter();
 });
 
 loadTemplates();
